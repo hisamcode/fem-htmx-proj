@@ -25,44 +25,44 @@ func NewTemplates() *Templates {
 }
 
 type Block struct {
-    Id int
+	Id int
 }
 
 type Blocks struct {
-    Start int
-    Next int
-    More bool
-    Blocks []Block
+	Start  int
+	Next   int
+	More   bool
+	Blocks []Block
 }
 
 func main() {
 	e := echo.New()
-    e.Renderer = NewTemplates()
-    e.Use(middleware.Logger())
+	e.Renderer = NewTemplates()
+	e.Use(middleware.Logger())
 
-    e.GET("/blocks", func(c echo.Context) error {
-        startStr := c.QueryParam("start")
-        start, err := strconv.Atoi(startStr)
-        if err != nil {
-            start = 0
-        }
+	e.GET("/blocks", func(c echo.Context) error {
+		startStr := c.QueryParam("start")
+		start, err := strconv.Atoi(startStr)
+		if err != nil {
+			start = 0
+		}
 
-        blocks := []Block{}
-        for i := start; i < start + 10; i++ {
-            blocks = append(blocks, Block{Id: i})
-        }
+		blocks := []Block{}
+		for i := start; i < start+10; i++ {
+			blocks = append(blocks, Block{Id: i})
+		}
 
-        template := "blocks"
-        if start == 0 {
-            template = "blocks-index"
-        }
-        return c.Render(http.StatusOK, template, Blocks{
-            Start: start,
-            Next: start + 10,
-            More: start + 10 < 100,
-            Blocks: blocks,
-        });
-    });
+		template := "blocks"
+		if start == 0 {
+			template = "blocks-index"
+		}
+		return c.Render(http.StatusOK, template, Blocks{
+			Start:  start,
+			Next:   start + 10,
+			More:   start+10 < 100,
+			Blocks: blocks,
+		})
+	})
 
-    e.Logger.Fatal(e.Start(":42069"))
+	e.Logger.Fatal(e.Start(":42069"))
 }

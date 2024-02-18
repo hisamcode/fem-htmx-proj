@@ -1,0 +1,91 @@
+{{ block "index" . }}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="/css/index.css">
+
+</head>
+
+<body>
+  {{ template "form" .Form }}
+  <hr />
+  {{ template "display" .Data }}
+</body>
+
+<script>
+  document.addEventListener("DOMContentLoaded", (event) => {
+    document.body.addEventListener('htmx:beforeSwap', function (evt) {
+      if (evt.detail.xhr.status === 422) {
+        // allow 422 responses to swap as we are using this as a signal that
+        // a form was submitted with bad data and want to rerender with the
+        // errors
+        //
+        // set isError to false to avoid error logging in console
+        evt.detail.shouldSwap = true;
+        evt.detail.isError = false;
+      }
+    });
+  })
+</script>
+
+</html>
+{{ end }}
+
+
+{{ block "form" . }}
+<form hx-swap="outerHTML" hx-post="/contacts">
+  name: <input {{ if .Values.name }} value="{{.Values.name }}" {{ end }} type="text" name="name" />
+
+  email: <input {{ if .Values.email }} value="{{ .Values.email }}" {{ end }} type="text" name="email" />
+  {{ if .Errors.email }}
+  <div style="color:red;">{{ .Errors.email }}</div>
+  {{ end }}
+
+  <button type="submit">Create Contact</button>
+</form>
+{{ end }}
+
+{{ block "display" .}}
+<div id="contacts" style="display: flex; flex-direction: column;">
+  {{ range .Contacts }}
+  {{ template "contact" . }}
+  {{ end }}
+</div>
+{{end}}
+
+{{ block "contact" . }}
+<div class="contact" id="contact-{{ .Id }}" style="display: flex;">
+  <div 
+    hx-indicator="#ci-{{ .Id }}" 
+    hx-target="#contact-{{ .Id }}" 
+    hx-swap="outerHTML swap:500ms" 
+    hx-delete="/contacts/{{ .Id }}"
+    style="width: 1rem; cursor:pointer;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path fill="none" d="M0 0h24v24H0z" />
+      <path
+        d="M4 2h16a1 1 0 011 1v1a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1zM3 6h18v16a1 1 0 01-1 1H4a1 1 0 01-1-1V6zm3 3v9a1 1 0 002 0v-9a1 1 0 00-2 0zm5 0v9a1 1 0 002 0v-9a1 1 0 00-2 0zm5 0v9a1 1 0 002 0v-9a1 1 0 00-2 0z" />
+    </svg>
+  </div>
+
+  Name: <span>{{ .Name }}</span>
+  Email: <span>{{ .Email }}</span>
+
+  <div id="ci-{{ .Id }}" class="htmx-indicator">
+    <img src="/images/bars.svg" alt="loading" style="width: 1rem">
+  </div>
+</div>
+{{end}}
+
+{{ block "oob-contact" . }}
+<div id="contacts" hx-swap-oob="afterbegin">
+  {{ template "contact" . }}
+</div>
+{{end}}
